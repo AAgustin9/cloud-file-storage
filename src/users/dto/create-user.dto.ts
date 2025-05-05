@@ -14,4 +14,4 @@ export class CreateUserDto {
   @ApiProperty({ example: 'John Doe', required: false })
   @IsString()
   name?: string;
-} 
+}
