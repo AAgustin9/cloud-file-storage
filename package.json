@@ -85,7 +85,8 @@
       "**/*.(t|j)s"
     ],
     "coverageDirectory": "./coverage",
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "setupFiles": ["<rootDir>/.jest/setEnvVars.ts"]
   },
   "lint-staged": {
     "*.ts": [
