@@ -30,7 +30,10 @@ export class AuthService {
 
     const payload = { sub: user.id, username: user.username, isAdmin: user.isAdmin };
     return {
-      access_token: this.jwtService.sign(payload),
+      access_token: this.jwtService.sign(payload, {
+        secret: process.env.JWT_SECRET,
+        expiresIn: '1h',
+      }),
     };
   }
 }
