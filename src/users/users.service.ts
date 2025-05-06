@@ -6,11 +6,11 @@ export class UsersService {
   private users: User[] = [];
   private idCounter = 1;
 
-  async findByUsername(username: string) {
+  async findByUsername(username: string): Promise<User | undefined> {
     return this.users.find((user) => user.username === username);
   }
 
-  async create(user: Partial<User>) {
+  async create(user: Partial<User>): Promise<User | undefined> {
     const newUser: User = {
       id: this.idCounter++,
       username: user.username ? user.username : '',

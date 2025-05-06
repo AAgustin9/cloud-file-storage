@@ -12,7 +12,7 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async register(dto: RegisterDto) {
+  async register(dto: RegisterDto): Promise<{ message: string }> {
     const existing = await this.usersService.findByUsername(dto.username);
     if (existing) throw new ConflictException('Username already exists');
 
@@ -22,7 +22,7 @@ export class AuthService {
     return { message: 'User registered successfully' };
   }
 
-  async login(dto: LoginDto) {
+  async login(dto: LoginDto): Promise<{ access_token: string }> {
     const user = await this.usersService.findByUsername(dto.username);
     if (!user || !(await bcrypt.compare(dto.password, user.password))) {
       throw new UnauthorizedException('Invalid credentials');
