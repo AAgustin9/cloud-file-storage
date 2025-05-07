@@ -1,23 +1,63 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { CloudStorageProvider } from './cloudStorageProvider';
-import { STORAGE_PROVIDER_TOKEN } from './files.module';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { StorageService } from './services/storage.service';
+import { v4 as uuid } from 'uuid';
 
 @Injectable()
 export class FilesService {
+  private MAX_MONTHLY_BYTES = 5 * 1024 * 1024 * 1024;
+
   constructor(
-    @Inject(STORAGE_PROVIDER_TOKEN)
-    private readonly storage: CloudStorageProvider,
+    private readonly storageService: StorageService,
+    private readonly prisma: PrismaService,
   ) {}
 
-  async uploadFile(file: Express.Multer.File): Promise<string> {
-    return this.storage.uploadFile(file);
+  async uploadFile(file: Express.Multer.File, userId: string): Promise<string> {
+    const url = await this.storageService.upload(file);
+
+    const key = `${uuid()}-${file.originalname}`;
+
+    await this.prisma.file.create({
+      data: {
+        id: key,
+        name: file.originalname,
+        size: file.size,
+        userId,
+      },
+    });
+
+    return url;
   }
 
-  async deleteFile(fileKey: string): Promise<void> {
-    return this.storage.deleteFile(fileKey);
+  async delete(fileKey: string, userId: string): Promise<void> {
+    const file = await this.prisma.file.findUnique({
+      where: { id: fileKey },
+    });
+    if (!file) {
+      throw new NotFoundException('File not found');
+    }
+    if (file.userId !== userId) {
+      throw new ForbiddenException('Cannot delete files of other users');
+    }
+
+    await this.storageService.deleteFile(fileKey);
+
+    await this.prisma.file.delete({
+      where: { id: fileKey },
+    });
   }
 
-  async getFile(fileKey: string): Promise<Buffer> {
-    return this.storage.getFileAndDownload(fileKey);
+  async getFile(fileKey: string, userId: string): Promise<string> {
+    const file = await this.prisma.file.findUnique({
+      where: { id: fileKey },
+    });
+    if (!file) {
+      throw new NotFoundException('File not found');
+    }
+    if (file.userId !== userId) {
+      throw new ForbiddenException('Cannot access files of other users');
+    }
+
+    return this.storageService.getFile(fileKey);
   }
 }
