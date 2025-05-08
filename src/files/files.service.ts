@@ -13,6 +13,18 @@ export class FilesService {
   ) {}
 
   async uploadFile(file: Express.Multer.File, userId: string): Promise<string> {
+    if (!userId) {
+      throw new NotFoundException('User ID is missing or invalid');
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+
     const key = `${uuid()}-${file.originalname}`;
     const url = await this.storageService.upload(file, key);
 
@@ -29,6 +41,10 @@ export class FilesService {
   }
 
   async delete(fileKey: string, userId: string): Promise<void> {
+    if (!userId) {
+      throw new NotFoundException('User ID is missing or invalid');
+    }
+
     const file = await this.prisma.file.findUnique({
       where: { id: fileKey },
     });
@@ -47,6 +63,10 @@ export class FilesService {
   }
 
   async getFile(fileKey: string, userId: string): Promise<string> {
+    if (!userId) {
+      throw new NotFoundException('User ID is missing or invalid');
+    }
+
     const file = await this.prisma.file.findUnique({
       where: { id: fileKey },
     });

@@ -1,6 +1,9 @@
+import { Role } from '@prisma/client';
+
 export class User {
-  id: string;
+  userId: string;
   username: string;
   password: string;
-  isAdmin: boolean;
+  role: Role;
+  usedquota: number;
 }

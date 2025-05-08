@@ -17,7 +17,7 @@ export class AuthService {
     if (existing) throw new ConflictException('Username already exists');
 
     const hashedPassword = await bcrypt.hash(dto.password, 10);
-    await this.usersService.create({ ...dto, password: hashedPassword, isAdmin: false });
+    await this.usersService.create({ username: dto.username, password: hashedPassword, isAdmin: false });
 
     return { message: 'User registered successfully' };
   }
@@ -28,7 +28,12 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const payload = { sub: user.id, username: user.username, isAdmin: user.isAdmin };
+    const payload = { 
+      sub: user.userId, 
+      username: user.username, 
+      isAdmin: user.role === 'ADMIN' 
+    };
+    
     return {
       access_token: this.jwtService.sign(payload, {
         secret: process.env.JWT_SECRET,
