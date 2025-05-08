@@ -18,7 +18,7 @@ interface AuthRequest extends Request {
   user: {
     id: string;
     username: string;
-    role: string;
+    isAdmin: boolean;
   };
 }
 
