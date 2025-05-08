@@ -34,25 +34,24 @@ export class FilesService {
     const key = `${uuid()}-${file.originalname}`;
     const url = await this.storageService.upload(file, key);
 
-
-  await this.prisma.$transaction([
-    this.prisma.file.create({
-      data: {
-        id: key,
-        name: file.originalname,
-        size: file.size,
-        userId,
-      },
-    }),
-    this.prisma.user.update({
-      where: { userId },
-      data: {
-        usedquota: {
-          increment: file.size
-        }
-      }
-    })
-  ]);
+    await this.prisma.$transaction([
+      this.prisma.file.create({
+        data: {
+          id: key,
+          name: file.originalname,
+          size: file.size,
+          userId,
+        },
+      }),
+      this.prisma.user.update({
+        where: { userId },
+        data: {
+          usedquota: {
+            increment: file.size,
+          },
+        },
+      }),
+    ]);
 
     return url;
   }
@@ -76,7 +75,6 @@ export class FilesService {
 
     try {
       await this.storageService.delete(fileKey);
-  
 
       await this.prisma.$transaction([
         this.prisma.file.delete({
@@ -86,10 +84,10 @@ export class FilesService {
           where: { userId },
           data: {
             usedquota: {
-              decrement: file.size
-            }
-          }
-        })
+              decrement: file.size,
+            },
+          },
+        }),
       ]);
     } catch (error) {
       console.error(`Error deleting file ${fileKey}: ${error.message}`);
