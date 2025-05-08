@@ -18,7 +18,7 @@ describe('AuthController (e2e)', () => {
   it('should register a user', () => {
     return request(app.getHttpServer())
       .post('/auth/register')
-      .send({ username: 'testuser', password: 'testpass' })
+      .send({ username: 'testuser90', password: 'testpass90' })
       .expect(201)
       .expect((res) => {
         expect(res.body.message).toBe('User registered successfully');
