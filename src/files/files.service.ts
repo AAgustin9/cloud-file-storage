@@ -48,18 +48,25 @@ export class FilesService {
     const file = await this.prisma.file.findUnique({
       where: { id: fileKey },
     });
+    
     if (!file) {
-      throw new NotFoundException('File not found');
+      throw new NotFoundException(`File with key ${fileKey} not found in database`);
     }
+    
     if (file.userId !== userId) {
       throw new ForbiddenException('Cannot delete files of other users');
     }
 
-    await this.storageService.delete(fileKey);
+    try {
+      await this.storageService.delete(fileKey);
 
-    await this.prisma.file.delete({
-      where: { id: fileKey },
-    });
+      await this.prisma.file.delete({
+        where: { id: fileKey },
+      });
+    } catch (error) {
+      console.error(`Error deleting file ${fileKey}: ${error.message}`);
+      throw new Error(`Failed to delete file from storage: ${error.message}`);
+    }
   }
 
   async getFile(fileKey: string, userId: string): Promise<string> {

@@ -22,11 +22,20 @@ export class StorageService implements StorageInterface {
   async delete(fileKey: string): Promise<void> {
     try {
       await this.s3.delete(fileKey);
+      console.log(`Successfully deleted ${fileKey} from S3`);
+      return; // Si la eliminación en S3 fue exitosa, no intentamos en Azure
     } catch (e) {
       console.error(`S3 delete failed for ${fileKey}, attempting Azure: ${e.message}`);
+      
+      // Si el error de S3 indica que el archivo no existe, intentamos con Azure
+      try {
+        await this.azure.delete(fileKey);
+        console.log(`Successfully deleted ${fileKey} from Azure`);
+      } catch (azureError) {
+        console.error(`Azure delete also failed: ${azureError.message}`);
+        throw new Error(`Failed to delete file ${fileKey}: ${azureError.message}`);
+      }
     }
-    console.log(`Deleting ${fileKey} from Azure`);
-    await this.azure.delete(fileKey);
   }
 
   async getFile(fileKey: string): Promise<string> {
