@@ -1,23 +1,27 @@
 import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { Role } from '@prisma/client';
 import { User } from './user.entity';
 
 @Injectable()
 export class UsersService {
-  private users: User[] = [];
-  private idCounter = 1;
+  constructor(private readonly prisma: PrismaService) {}
 
-  async findByUsername(username: string): Promise<User | undefined> {
-    return this.users.find((user) => user.username === username);
+  async findByUsername(username: string): Promise<User | null> {
+    return this.prisma.user.findUnique({
+      where: { username },
+    });
   }
 
-  async create(user: Partial<User>): Promise<User | undefined> {
-    const newUser: User = {
-      id: this.idCounter++,
-      username: user.username ? user.username : '',
-      password: user.password ? user.password : 'thisIsTheDefaultPassword',
-      isAdmin: !!user.isAdmin,
-    };
-    this.users.push(newUser);
-    return newUser;
+  async create(user: { username: string; password: string; isAdmin?: boolean }): Promise<User> {
+    const created = await this.prisma.user.create({
+      data: {
+        username: user.username,
+        password: user.password,
+        role: user.isAdmin ? Role.ADMIN : Role.USER,
+      },
+    });
+
+    return created;
   }
 }
