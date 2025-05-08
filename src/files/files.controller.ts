@@ -9,7 +9,7 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { FilesService } from './files.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../auth/jwt.strategy';
@@ -23,6 +23,7 @@ interface AuthRequest extends Request {
 }
 
 @ApiTags('files')
+@ApiBearerAuth()
 @Controller('files')
 @UseGuards(JwtAuthGuard)
 export class FilesController {
@@ -30,9 +31,9 @@ export class FilesController {
 
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))
+  @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Upload a file' })
-  @ApiResponse({ status: 201, description: 'File successfully uploaded' })
-  @ApiResponse({ status: 409, description: 'File already exists' })
+  @ApiResponse({ status: 201, description: 'File uploaded successfully', type: String })
   uploadFile(@UploadedFile() file: Express.Multer.File, @Req() req: AuthRequest): Promise<string> {
     const userId = req.user.id;
     return this.filesService.uploadFile(file, userId);

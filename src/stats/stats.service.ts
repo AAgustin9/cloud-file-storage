@@ -1,5 +1,5 @@
-import { Injectable } from "@nestjs/common";
-import { PrismaService } from "../prisma/prisma.service";
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class StatsService {
@@ -29,7 +29,7 @@ export class StatsService {
       },
     });
 
-    return users.map(user => ({
+    return users.map((user) => ({
       userId: user.userId,
       username: user.username,
       totalBytesUsedToday: user.usedquota,

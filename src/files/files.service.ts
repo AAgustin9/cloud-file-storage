@@ -13,9 +13,8 @@ export class FilesService {
   ) {}
 
   async uploadFile(file: Express.Multer.File, userId: string): Promise<string> {
-    const url = await this.storageService.upload(file);
-
     const key = `${uuid()}-${file.originalname}`;
+    const url = await this.storageService.upload(file, key);
 
     await this.prisma.file.create({
       data: {
@@ -40,7 +39,7 @@ export class FilesService {
       throw new ForbiddenException('Cannot delete files of other users');
     }
 
-    await this.storageService.deleteFile(fileKey);
+    await this.storageService.delete(fileKey);
 
     await this.prisma.file.delete({
       where: { id: fileKey },

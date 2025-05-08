@@ -1,18 +1,20 @@
 import { Injectable } from '@nestjs/common';
 import { BlobServiceClient } from '@azure/storage-blob';
-import { v4 as uuid } from 'uuid';
 import { StorageInterface } from './storage.interface';
 
 @Injectable()
 export class AzureProvider implements StorageInterface {
-  private client = BlobServiceClient.fromConnectionString(
-    process.env.AZURE_STORAGE_CONNECTION_STRING!,
-  );
+  private client: BlobServiceClient;
+  private containerName: string = process.env.AZURE_CONTAINER || '';
 
-  async upload(file: Express.Multer.File): Promise<string> {
-    const containerClient = this.client.getContainerClient(process.env.AZURE_CONTAINER!);
-    const blobName = `${uuid()}-${file.originalname}`;
-    const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+  constructor() {
+    const conn = process.env.AZURE_STORAGE_CONNECTION_STRING || '';
+    this.client = BlobServiceClient.fromConnectionString(conn);
+  }
+
+  async upload(file: Express.Multer.File, key: string): Promise<string> {
+    const containerClient = this.client.getContainerClient(this.containerName);
+    const blockBlobClient = containerClient.getBlockBlobClient(key);
     await blockBlobClient.uploadData(file.buffer, {
       blobHTTPHeaders: { blobContentType: file.mimetype },
     });
@@ -20,13 +22,13 @@ export class AzureProvider implements StorageInterface {
   }
 
   async delete(fileKey: string): Promise<void> {
-    const containerClient = this.client.getContainerClient(process.env.AZURE_CONTAINER!);
+    const containerClient = this.client.getContainerClient(this.containerName);
     const blobClient = containerClient.getBlobClient(fileKey);
-    await blobClient.delete();
+    await blobClient.deleteIfExists();
   }
 
   async getFile(fileKey: string): Promise<string> {
-    const container = this.client.getContainerClient(process.env.AZURE_CONTAINER!);
+    const container = this.client.getContainerClient(this.containerName);
     const blobClient = container.getBlobClient(fileKey);
     return blobClient.url;
   }
