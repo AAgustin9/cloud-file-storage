@@ -48,11 +48,11 @@ export class FilesService {
     const file = await this.prisma.file.findUnique({
       where: { id: fileKey },
     });
-    
+
     if (!file) {
       throw new NotFoundException(`File with key ${fileKey} not found in database`);
     }
-    
+
     if (file.userId !== userId) {
       throw new ForbiddenException('Cannot delete files of other users');
     }

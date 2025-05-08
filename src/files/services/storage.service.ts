@@ -26,7 +26,7 @@ export class StorageService implements StorageInterface {
       return; // Si la eliminación en S3 fue exitosa, no intentamos en Azure
     } catch (e) {
       console.error(`S3 delete failed for ${fileKey}, attempting Azure: ${e.message}`);
-      
+
       // Si el error de S3 indica que el archivo no existe, intentamos con Azure
       try {
         await this.azure.delete(fileKey);
