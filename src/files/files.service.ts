@@ -25,17 +25,34 @@ export class FilesService {
       throw new NotFoundException(`User with ID ${userId} not found`);
     }
 
+    if (user.usedquota + file.size > this.MAX_MONTHLY_BYTES) {
+      throw new ForbiddenException(
+        `Cannot upload file: quota exceeded. Maximum allowed is ${this.MAX_MONTHLY_BYTES / (1024 * 1024 * 1024)}GB, used ${user.usedquota / (1024 * 1024 * 1024)}GB, file size is ${file.size / (1024 * 1024)}MB`,
+      );
+    }
+
     const key = `${uuid()}-${file.originalname}`;
     const url = await this.storageService.upload(file, key);
 
-    await this.prisma.file.create({
+
+  await this.prisma.$transaction([
+    this.prisma.file.create({
       data: {
         id: key,
         name: file.originalname,
         size: file.size,
         userId,
       },
-    });
+    }),
+    this.prisma.user.update({
+      where: { userId },
+      data: {
+        usedquota: {
+          increment: file.size
+        }
+      }
+    })
+  ]);
 
     return url;
   }
@@ -59,10 +76,21 @@ export class FilesService {
 
     try {
       await this.storageService.delete(fileKey);
+  
 
-      await this.prisma.file.delete({
-        where: { id: fileKey },
-      });
+      await this.prisma.$transaction([
+        this.prisma.file.delete({
+          where: { id: fileKey },
+        }),
+        this.prisma.user.update({
+          where: { userId },
+          data: {
+            usedquota: {
+              decrement: file.size
+            }
+          }
+        })
+      ]);
     } catch (error) {
       console.error(`Error deleting file ${fileKey}: ${error.message}`);
       throw new Error(`Failed to delete file from storage: ${error.message}`);
