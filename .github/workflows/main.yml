@@ -49,7 +49,7 @@ jobs:
         run: npx prisma generate
 
       - name: Apply DB migrations
-        run: npx prisma migrate deploy
+        run: npx prisma migrate reset
 
       - name: Run linting
         run: npm run lint
