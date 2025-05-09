@@ -2,10 +2,11 @@ import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/commo
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from './services/storage.service';
 import { v4 as uuid } from 'uuid';
+import { MAX_MONTHLY_BYTES } from '../utils/constants';
 
 @Injectable()
 export class FilesService {
-  private MAX_MONTHLY_BYTES = 5 * 1024 * 1024 * 1024;
+  private MAX_MONTHLY_BYTES = MAX_MONTHLY_BYTES;
 
   constructor(
     private readonly storageService: StorageService,
