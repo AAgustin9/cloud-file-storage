@@ -12,8 +12,12 @@ export class UsersController {
   @Post()
   @ApiOperation({ summary: 'Create a new user' })
   @ApiResponse({ status: 201, description: 'User successfully created' })
-  @ApiResponse({ status: 409, description: 'Email already exists' })
-  async create(@Body() createUserDto: CreateUserDto): Promise<User | undefined> {
-    return this.usersService.create(createUserDto);
+  @ApiResponse({ status: 409, description: 'Username already exists' })
+  async create(@Body() createUserDto: CreateUserDto): Promise<User> {
+    return this.usersService.create({
+      username: createUserDto.username,
+      password: createUserDto.password,
+      isAdmin: false,
+    });
   }
 }
