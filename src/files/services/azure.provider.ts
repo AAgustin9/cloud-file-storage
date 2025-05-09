@@ -72,7 +72,6 @@ export class AzureProvider implements StorageInterface {
       const blobClient = containerClient.getBlobClient(fileKey);
       const blobExists = await blobClient.exists();
       if (!blobExists) {
-        console.log(`File ${fileKey} does not exist in Azure container.`);
         return;
       }
 
