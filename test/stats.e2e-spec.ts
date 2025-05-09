@@ -20,32 +20,27 @@ describe('StatsController (e2e)', () => {
 
     prisma = new PrismaClient();
 
-    // Crear un usuario normal
     const regularUsername = `regular_user_${Date.now()}`;
     await request(app.getHttpServer())
       .post('/auth/register')
       .send({ username: regularUsername, password: 'test123' });
 
-    // Iniciar sesión como usuario normal
     const userLoginResponse = await request(app.getHttpServer())
       .post('/auth/login')
       .send({ username: regularUsername, password: 'test123' });
 
     userToken = userLoginResponse.body.access_token;
 
-    // Crear un usuario administrador
     const adminUsername = `admin_user_${Date.now()}`;
     await request(app.getHttpServer())
       .post('/auth/register')
       .send({ username: adminUsername, password: 'test123' });
 
-    // Convertir el usuario en administrador
     await prisma.user.update({
       where: { username: adminUsername },
       data: { role: Role.ADMIN },
     });
 
-    // Iniciar sesión como administrador
     const adminLoginResponse = await request(app.getHttpServer())
       .post('/auth/login')
       .send({ username: adminUsername, password: 'test123' });

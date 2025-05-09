@@ -121,16 +121,13 @@ describe('Quota Limits (e2e)', () => {
   });
 
   it('should simulate quota limit check', async () => {
-    // Crear un usuario específico para este test
     const username = `quota_limit_user_${Date.now()}`;
 
-    // Registrar usuario
     await request(app.getHttpServer())
       .post('/auth/register')
       .send({ username, password: 'testpassword' })
       .expect(201);
 
-    // Obtener token
     const loginResponse = await request(app.getHttpServer())
       .post('/auth/login')
       .send({ username, password: 'testpassword' })
@@ -138,7 +135,6 @@ describe('Quota Limits (e2e)', () => {
 
     const testToken = loginResponse.body.access_token;
 
-    // Obtener el usuario
     const testUser = await prisma.user.findUnique({
       where: { username },
       select: { userId: true },
@@ -148,30 +144,25 @@ describe('Quota Limits (e2e)', () => {
       throw new Error('Usuario de prueba no encontrado');
     }
 
-    // Establecer manualmente la cuota cerca del límite (MAX_MONTHLY_BYTES_TEST es 2MB)
-    const usedQuota = MAX_MONTHLY_BYTES_TEST - 512 * 1024; // 0.5MB menos que el límite
+    const usedQuota = MAX_MONTHLY_BYTES_TEST - 512 * 1024;
     await prisma.user.update({
       where: { userId: testUser.userId },
       data: { usedquota: usedQuota },
     });
 
-    // Crear un archivo que excederá el límite (1MB)
     const testFilePath = path.join(__dirname, 'test-exceed-file.txt');
     const oneMB = 1024 * 1024;
     const testData = Buffer.alloc(oneMB, 'b');
     fs.writeFileSync(testFilePath, testData);
 
-    // Intentar subir - debería fallar con 403
     await request(app.getHttpServer())
       .post('/files/upload')
       .set('Authorization', `Bearer ${testToken}`)
       .attach('file', testFilePath)
-      .expect(403); // Quota exceeded
+      .expect(403);
 
-    // Limpiar
     fs.unlinkSync(testFilePath);
 
-    // Eliminar el usuario de prueba
     await prisma.user.delete({
       where: { userId: testUser.userId },
     });

@@ -7,7 +7,6 @@ import { FilesModule } from '../src/files/files.module';
 import { StatsModule } from '../src/stats/stats.module';
 import { MAX_MONTHLY_BYTES_TEST } from '../src/utils/constants';
 
-// Sobrescribir MAX_MONTHLY_BYTES para pruebas
 import * as constants from '../src/utils/constants';
 (constants as any).MAX_MONTHLY_BYTES = MAX_MONTHLY_BYTES_TEST;
 

@@ -18,13 +18,11 @@ describe('FilesController (e2e)', () => {
     app = moduleFixture.createNestApplication();
     await app.init();
 
-    // Registrar un usuario para las pruebas
     const username = `testuser_${Date.now()}`;
     await request(app.getHttpServer())
       .post('/auth/register')
       .send({ username, password: 'testpassword' });
 
-    // Iniciar sesión para obtener un token
     const loginResponse = await request(app.getHttpServer())
       .post('/auth/login')
       .send({ username, password: 'testpassword' });
@@ -33,7 +31,6 @@ describe('FilesController (e2e)', () => {
   });
 
   it('should upload a file', async () => {
-    // Crear un archivo de prueba temporal
     const testFilePath = path.join(__dirname, 'test-file.txt');
     fs.writeFileSync(testFilePath, 'This is a test file content');
 
@@ -43,12 +40,10 @@ describe('FilesController (e2e)', () => {
       .attach('file', testFilePath)
       .expect(201);
 
-    // Guardar la clave del archivo para usarla en pruebas posteriores
     expect(response.text).toBeDefined();
     expect(typeof response.text).toBe('string');
     uploadedFileKey = response.text.split('/').pop()!;
 
-    // Limpiar el archivo temporal
     fs.unlinkSync(testFilePath);
   });
 
