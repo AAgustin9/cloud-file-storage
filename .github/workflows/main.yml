@@ -49,13 +49,13 @@ jobs:
         run: npx prisma generate
 
       - name: Apply DB migrations
-        run: npx prisma migrate reset
-
-      - name: Run linting
-        run: npm run lint
+        run: npx prisma migrate deploy
 
       - name: Run tests
         run: npm run test:e2e
+
+      - name: Run linting
+        run: npm run lint
 
       - name: Build
         run: npm run build
