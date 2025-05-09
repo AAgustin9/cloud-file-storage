@@ -21,14 +21,14 @@ export class StatsService {
     });
 
     const totalFiles = await this.prisma.file.count();
-    const totalStorage = users.reduce((acc, user) => acc + user.usedquota, 0);
+    const totalStorage = users.reduce((acc, user) => acc + Number(user.usedquota), 0);
     const totalUsers = users.length;
 
     return {
       users: users.map((user) => ({
         userId: user.userId,
         username: user.username,
-        usedQuota: user.usedquota,
+        usedQuota: Number(user.usedquota),
         fileCount: user._count.files,
       })),
       summary: {

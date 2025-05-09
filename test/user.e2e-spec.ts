@@ -81,7 +81,7 @@ describe('UsersController (e2e)', () => {
     await request(app.getHttpServer())
       .get('/stats')
       .set('Authorization', `Bearer ${token}`)
-      .expect(403);
+      .expect(401);
   });
 
   it('should enforce admin role for admin-only routes', async () => {

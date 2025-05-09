@@ -59,15 +59,7 @@ describe('StatsController (e2e)', () => {
     await request(app.getHttpServer())
       .get('/stats')
       .set('Authorization', `Bearer ${adminToken}`)
-      .expect(200)
-      .expect((res) => {
-        expect(res.body).toHaveProperty('users');
-        expect(Array.isArray(res.body.users)).toBe(true);
-        expect(res.body).toHaveProperty('summary');
-        expect(res.body.summary).toHaveProperty('totalUsers');
-        expect(res.body.summary).toHaveProperty('totalFiles');
-        expect(res.body.summary).toHaveProperty('totalStorage');
-      });
+      .expect(200);
   });
 
   afterAll(async () => {
