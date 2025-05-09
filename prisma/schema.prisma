@@ -13,7 +13,7 @@ model User {
   password  String
   role      Role   @default(USER)
   files     File[]
-  usedquota Int    @default(0)
+  usedquota BigInt @default(0)
 }
 
 model File {

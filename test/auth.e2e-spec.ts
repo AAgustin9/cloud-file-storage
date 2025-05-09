@@ -16,9 +16,10 @@ describe('AuthController (e2e)', () => {
   });
 
   it('should register a user', () => {
+    const date = Date.now();
     return request(app.getHttpServer())
       .post('/auth/register')
-      .send({ username: 'testuser90', password: 'testpass90' })
+      .send({ username: `testuser${date}`, password: 'testpass90' })
       .expect(201)
       .expect((res) => {
         expect(res.body.message).toBe('User registered successfully');

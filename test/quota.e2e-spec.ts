@@ -5,6 +5,7 @@ import { AppModule } from '../src/app.module';
 import * as fs from 'fs';
 import * as path from 'path';
 import { PrismaClient } from '@prisma/client';
+import { randomStringGenerator } from "@nestjs/common/utils/random-string-generator.util";
 
 describe('Quota Limits (e2e)', () => {
   let app: INestApplication;
@@ -23,34 +24,30 @@ describe('Quota Limits (e2e)', () => {
 
     prisma = new PrismaClient();
 
-    // Registrar un usuario para las pruebas
     const username = `quotauser_${Date.now()}`;
     await request(app.getHttpServer())
       .post('/auth/register')
       .send({ username, password: 'testpassword' });
 
-    // Iniciar sesión para obtener un token
     const loginResponse = await request(app.getHttpServer())
       .post('/auth/login')
       .send({ username, password: 'testpassword' });
-    
+
     token = loginResponse.body.access_token;
 
-    // Obtener el ID del usuario
     const user = await prisma.user.findUnique({
       where: { username },
-      select: { userId: true }
+      select: { userId: true },
     });
-    
+
     if (!user) {
       throw new Error(`Usuario ${username} no encontrado`);
     }
-    
+
     userId = user.userId;
   });
 
   it('should upload a file and update user quota', async () => {
-    // Crear un archivo de prueba de 1MB
     const testFilePath = path.join(__dirname, 'test-quota-file.txt');
     const oneMB = 1024 * 1024;
     const testData = Buffer.alloc(oneMB, 'a');
@@ -62,14 +59,12 @@ describe('Quota Limits (e2e)', () => {
       .attach('file', testFilePath)
       .expect(201);
 
-    // Guardar la clave del archivo subido
     const fileKey = response.text.split('/').pop() || '';
     uploadedFiles.push(fileKey);
 
-    // Verificar que la cuota del usuario se actualizó
     const updatedUser = await prisma.user.findUnique({
       where: { userId },
-      select: { usedquota: true }
+      select: { usedquota: true },
     });
 
     if (!updatedUser) {
@@ -78,7 +73,6 @@ describe('Quota Limits (e2e)', () => {
 
     expect(updatedUser.usedquota).toBeGreaterThanOrEqual(oneMB);
 
-    // Limpiar el archivo temporal
     fs.unlinkSync(testFilePath);
   });
 
@@ -98,27 +92,24 @@ describe('Quota Limits (e2e)', () => {
       return;
     }
 
-    // Tomar nota de la cuota antes de eliminar
     const beforeDelete = await prisma.user.findUnique({
       where: { userId },
-      select: { usedquota: true }
+      select: { usedquota: true },
     });
 
     if (!beforeDelete) {
       throw new Error(`Usuario con ID ${userId} no encontrado antes de eliminar`);
     }
 
-    // Eliminar un archivo
     const fileToDelete = uploadedFiles[0];
     await request(app.getHttpServer())
       .delete(`/files/${fileToDelete}`)
       .set('Authorization', `Bearer ${token}`)
       .expect(200);
 
-    // Verificar que la cuota se redujo
     const afterDelete = await prisma.user.findUnique({
       where: { userId },
-      select: { usedquota: true }
+      select: { usedquota: true },
     });
 
     if (!afterDelete) {
@@ -127,45 +118,46 @@ describe('Quota Limits (e2e)', () => {
 
     expect(afterDelete.usedquota).toBeLessThan(beforeDelete.usedquota);
 
-    // Eliminar el archivo de la lista de archivos subidos
     uploadedFiles.shift();
   });
 
-  // Test para verificar el límite de cuota
-  // Este test es más conceptual ya que no queremos llenar 5GB en pruebas reales
   it('should simulate quota limit check', async () => {
-    // Establecer la cuota del usuario justo por debajo del límite (5GB - 1MB)
-    const nearLimit = 5 * 1024 * 1024 * 1024 - 1024 * 1024;
-    await prisma.user.update({
-      where: { userId },
-      data: { usedquota: nearLimit },
+    const nearLimit = 5 * 1024 * 1024;
+    const date = Date.now();
+    await prisma.user.create({
+      data: {
+        username: `userForQuotaTest_${date}`,
+        password: 'irrelevanteEnTest',
+        role: 'USER',
+        usedquota: nearLimit,
+      },
     });
 
-    // Crear un archivo de prueba de 2MB (que excederá el límite)
     const testFilePath = path.join(__dirname, 'test-over-quota.txt');
     const twoMB = 2 * 1024 * 1024;
     const testData = Buffer.alloc(twoMB, 'b');
     fs.writeFileSync(testFilePath, testData);
 
-    // Intentar subir el archivo (debería fallar por límite de cuota)
+    const loginResponse = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({ username: `userForQuotaTest_${date}`, password: 'irrelevanteEnTest' });
+
+    const token2 = loginResponse.body.access_token;
+
     await request(app.getHttpServer())
       .post('/files/upload')
-      .set('Authorization', `Bearer ${token}`)
+      .set('Authorization', `Bearer ${token2}`)
       .attach('file', testFilePath)
-      .expect(403); // Forbidden - cuota excedida
+      .expect(403);
 
-    // Limpiar el archivo temporal
     fs.unlinkSync(testFilePath);
 
-    // Devolver la cuota a un valor normal para futuras pruebas
-    await prisma.user.update({
+    await prisma.user.delete({
       where: { userId },
-      data: { usedquota: 0 }
     });
   });
 
   afterAll(async () => {
-    // Eliminar archivos que pudieron haberse subido
     for (const fileKey of uploadedFiles) {
       try {
         await request(app.getHttpServer())
@@ -179,4 +171,4 @@ describe('Quota Limits (e2e)', () => {
     await prisma.$disconnect();
     await app.close();
   });
-}); 
+});

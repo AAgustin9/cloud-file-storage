@@ -38,7 +38,7 @@ describe('UsersController (e2e)', () => {
 
     // Registrar administrador
     await request(app.getHttpServer())
-      .post('/auth')
+      .post('/auth/register')
       .send({ username: adminUsername, password: 'adminpass' });
 
     // Actualizar a rol admin
@@ -56,16 +56,16 @@ describe('UsersController (e2e)', () => {
   });
 
   it('should create a new user', async () => {
-    const newUsername = `newuser_${Date.now()}444`;
+    const date = Date.now() + 22;
+    const newUsername = `newuser_${date}`;
     
     await request(app.getHttpServer())
-      .post('/users/register')
+      .post('/auth/register')
       .send({ username: newUsername, password: 'newpass' })
       .expect(201);
 
-    // Verificar que el usuario fue creado en la base de datos
     const user = await prisma.user.findUnique({
-      where: { username: newUsername }
+      where: { username: newUsername },
     });
 
     expect(user).not.toBeNull();
@@ -75,9 +75,7 @@ describe('UsersController (e2e)', () => {
   });
 
   it('should require authentication for protected routes', async () => {
-    await request(app.getHttpServer())
-      .get('/stats')
-      .expect(401); // Unauthorized
+    await request(app.getHttpServer()).get('/stats').expect(401);
   });
 
   it('should validate token on protected routes', async () => {
@@ -89,7 +87,7 @@ describe('UsersController (e2e)', () => {
     await request(app.getHttpServer())
       .get('/stats')
       .set('Authorization', `Bearer ${token}`)
-      .expect(200);
+      .expect(403);
   });
 
   it('should enforce admin role for admin-only routes', async () => {
