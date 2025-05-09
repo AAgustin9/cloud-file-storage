@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
-import { AppModule } from '../src/app.module';
+import { AppE2eModule } from './app.e2e-module';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -12,7 +12,7 @@ describe('FilesController (e2e)', () => {
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
+      imports: [AppE2eModule],
     }).compile();
 
     app = moduleFixture.createNestApplication();
@@ -28,7 +28,7 @@ describe('FilesController (e2e)', () => {
     const loginResponse = await request(app.getHttpServer())
       .post('/auth/login')
       .send({ username, password: 'testpassword' });
-    
+
     token = loginResponse.body.access_token;
   });
 
@@ -85,4 +85,4 @@ describe('FilesController (e2e)', () => {
   afterAll(async () => {
     await app.close();
   });
-}); 
+});

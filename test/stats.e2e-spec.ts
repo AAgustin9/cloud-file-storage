@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
-import { AppModule } from '../src/app.module';
+import { AppE2eModule } from './app.e2e-module';
 import { PrismaClient, Role } from '@prisma/client';
 
 describe('StatsController (e2e)', () => {
@@ -12,7 +12,7 @@ describe('StatsController (e2e)', () => {
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
+      imports: [AppE2eModule],
     }).compile();
 
     app = moduleFixture.createNestApplication();
@@ -30,7 +30,7 @@ describe('StatsController (e2e)', () => {
     const userLoginResponse = await request(app.getHttpServer())
       .post('/auth/login')
       .send({ username: regularUsername, password: 'test123' });
-    
+
     userToken = userLoginResponse.body.access_token;
 
     // Crear un usuario administrador
@@ -42,14 +42,14 @@ describe('StatsController (e2e)', () => {
     // Convertir el usuario en administrador
     await prisma.user.update({
       where: { username: adminUsername },
-      data: { role: Role.ADMIN }
+      data: { role: Role.ADMIN },
     });
 
     // Iniciar sesión como administrador
     const adminLoginResponse = await request(app.getHttpServer())
       .post('/auth/login')
       .send({ username: adminUsername, password: 'test123' });
-    
+
     adminToken = adminLoginResponse.body.access_token;
   });
 
@@ -96,4 +96,4 @@ describe('StatsController (e2e)', () => {
     await prisma.$disconnect();
     await app.close();
   });
-}); 
+});

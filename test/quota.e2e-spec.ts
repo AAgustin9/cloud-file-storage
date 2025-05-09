@@ -1,11 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
-import { AppModule } from '../src/app.module';
+import { AppE2eModule } from './app.e2e-module';
 import * as fs from 'fs';
 import * as path from 'path';
 import { PrismaClient } from '@prisma/client';
-import { randomStringGenerator } from "@nestjs/common/utils/random-string-generator.util";
+import { MAX_MONTHLY_BYTES_TEST } from '../src/utils/constants';
 
 describe('Quota Limits (e2e)', () => {
   let app: INestApplication;
@@ -16,7 +16,7 @@ describe('Quota Limits (e2e)', () => {
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
+      imports: [AppE2eModule],
     }).compile();
 
     app = moduleFixture.createNestApplication();
@@ -88,8 +88,7 @@ describe('Quota Limits (e2e)', () => {
 
   it('should update quota when a file is deleted', async () => {
     if (uploadedFiles.length === 0) {
-      console.error('No files uploaded in previous tests');
-      return;
+      throw new Error('No files uploaded in previous tests');
     }
 
     const beforeDelete = await prisma.user.findUnique({
@@ -122,38 +121,59 @@ describe('Quota Limits (e2e)', () => {
   });
 
   it('should simulate quota limit check', async () => {
-    const nearLimit = 5 * 1024 * 1024;
-    const date = Date.now();
-    await prisma.user.create({
-      data: {
-        username: `userForQuotaTest_${date}`,
-        password: 'irrelevanteEnTest',
-        role: 'USER',
-        usedquota: nearLimit,
-      },
-    });
+    // Crear un usuario específico para este test
+    const username = `quota_limit_user_${Date.now()}`;
 
-    const testFilePath = path.join(__dirname, 'test-over-quota.txt');
-    const twoMB = 2 * 1024 * 1024;
-    const testData = Buffer.alloc(twoMB, 'b');
-    fs.writeFileSync(testFilePath, testData);
+    // Registrar usuario
+    await request(app.getHttpServer())
+      .post('/auth/register')
+      .send({ username, password: 'testpassword' })
+      .expect(201);
 
+    // Obtener token
     const loginResponse = await request(app.getHttpServer())
       .post('/auth/login')
-      .send({ username: `userForQuotaTest_${date}`, password: 'irrelevanteEnTest' });
+      .send({ username, password: 'testpassword' })
+      .expect(201);
 
-    const token2 = loginResponse.body.access_token;
+    const testToken = loginResponse.body.access_token;
 
+    // Obtener el usuario
+    const testUser = await prisma.user.findUnique({
+      where: { username },
+      select: { userId: true },
+    });
+
+    if (!testUser) {
+      throw new Error('Usuario de prueba no encontrado');
+    }
+
+    // Establecer manualmente la cuota cerca del límite (MAX_MONTHLY_BYTES_TEST es 2MB)
+    const usedQuota = MAX_MONTHLY_BYTES_TEST - 512 * 1024; // 0.5MB menos que el límite
+    await prisma.user.update({
+      where: { userId: testUser.userId },
+      data: { usedquota: usedQuota },
+    });
+
+    // Crear un archivo que excederá el límite (1MB)
+    const testFilePath = path.join(__dirname, 'test-exceed-file.txt');
+    const oneMB = 1024 * 1024;
+    const testData = Buffer.alloc(oneMB, 'b');
+    fs.writeFileSync(testFilePath, testData);
+
+    // Intentar subir - debería fallar con 403
     await request(app.getHttpServer())
       .post('/files/upload')
-      .set('Authorization', `Bearer ${token2}`)
+      .set('Authorization', `Bearer ${testToken}`)
       .attach('file', testFilePath)
-      .expect(403);
+      .expect(403); // Quota exceeded
 
+    // Limpiar
     fs.unlinkSync(testFilePath);
 
+    // Eliminar el usuario de prueba
     await prisma.user.delete({
-      where: { userId },
+      where: { userId: testUser.userId },
     });
   });
 
