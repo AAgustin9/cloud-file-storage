@@ -1,4 +1,4 @@
-@startuml "Cloud File Storage Architecture"
+@startuml
 
 
 package "Auth" {
@@ -94,11 +94,16 @@ AuthService --> JwtService
 StatsController --> StatsService
 StatsController ..> AdminGuard: uses
 StatsController ..> JwtAuthGuard: uses
+StatsController ..> GlobalStats: uses
 FilesController --> FilesService
 FilesController ..> JwtAuthGuard: uses
+UsersService ..> User: uses
+UsersController --> UsersService
 UsersService --> PrismaService
 FilesService --> StorageService
 FilesService --> PrismaService
 StatsService --> PrismaService
+StorageService --> S3
+StorageService --> Azure
 
 @enduml
