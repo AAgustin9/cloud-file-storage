@@ -45,14 +45,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Run linting
+        run: npm run lint
+
       - name: Generate Prisma client
         run: npx prisma generate
 
       - name: Apply DB migrations
         run: npx prisma migrate deploy
-
-      - name: Run linting
-        run: npm run lint
 
       - name: Run tests
         run: npm run test:e2e
