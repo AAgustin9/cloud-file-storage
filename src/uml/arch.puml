@@ -1,0 +1,104 @@
+@startuml "Cloud File Storage Architecture"
+
+
+package "Auth" {
+  class AuthController {
+    +register
+    +login
+  }
+  
+  class AuthService {
+    +register
+    +login
+  }
+  
+  class AdminGuard {
+    +canActivate
+  }
+  
+  class JwtAuthGuard {
+  }
+}
+
+package "Users" {
+  class UsersController {
+  }
+  
+  class UsersService {
+    +findByUsername
+    +create
+  }
+  
+  class User {
+    +userId
+    +username
+    +password
+    +role
+    +usedquota
+  }
+}
+
+package "Files" {
+  class FilesController {
+    +uploadFile
+    +getFile
+    +deleteFile
+  }
+  
+  class FilesService {
+    +uploadFile
+    +delete
+    +getFile
+  }
+  
+  class StorageService {
+    uses a storage provider
+    +upload
+    +delete
+    +getFile
+  }
+}
+
+package "Stats" {
+  class StatsController {
+    +getStats
+  }
+  
+  class StatsService {
+    -prisma
+    +getStats
+  }
+  
+  class GlobalStats {
+    dataClass
+    +users
+    +summary
+  }
+}
+
+package "Utilities" {
+  class PrismaService {
+    +onModuleInit
+    +onModuleDestroy
+  }
+  
+  class Constants {
+    +MAX_MONTHLY_BYTES
+    +MAX_MONTHLY_BYTES_TEST
+  }
+}
+
+AuthController --> AuthService
+AuthService --> UsersService
+AuthService --> JwtService
+StatsController --> StatsService
+StatsController ..> AdminGuard: uses
+StatsController ..> JwtAuthGuard: uses
+FilesController --> FilesService
+FilesController ..> JwtAuthGuard: uses
+UsersService --> PrismaService
+FilesService --> StorageService
+FilesService --> PrismaService
+StatsService --> PrismaService
+
+@enduml

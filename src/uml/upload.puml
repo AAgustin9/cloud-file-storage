@@ -1,0 +1,34 @@
+@startuml
+actor "Usuario" as user
+participant "FilesController" as fc
+participant "JwtAuthGuard" as jag
+participant "FilesService" as fs
+participant "UsersService" as us
+participant "PrismaService" as ps
+participant "StorageService" as ss
+database "Base de datos" as db
+database "Almacenamiento" as storage
+
+user -> fc ++: POST /files/upload
+fc -> jag ++: valida token
+jag -> jag: extrae userId del token
+jag --> fc --: token valido
+fc -> fs ++: uploadFile(file, userId)
+fs -> ps ++: findUnique(userId)
+ps -> db ++: query
+db --> ps --: user
+ps --> fs --: user
+fs -> fs: verifica cuota disponible
+fs -> ss ++: upload(file, key)
+ss -> storage ++: almacena archivo
+storage --> ss --: URL del archivo
+ss --> fs --: URL del archivo
+fs -> ps ++: transaccion
+ps -> db ++: crea registro File
+db --> ps --: file creado
+ps -> db ++: actualiza usedquota del User
+db --> ps --: user actualizado
+ps --> fs --: transaccion completada
+fs --> fc --: URL del archivo
+fc --> user --: 201 Created, URL
+@enduml
