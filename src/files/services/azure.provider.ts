@@ -39,7 +39,6 @@ export class AzureProvider implements StorageInterface {
       }
 
       const containerClient = this.client.getContainerClient(this.containerName);
-      // Verificar si el contenedor existe
       const containerExists = await containerClient.exists();
       if (!containerExists) {
         throw new Error(`Azure container '${this.containerName}' does not exist.`);
@@ -65,18 +64,15 @@ export class AzureProvider implements StorageInterface {
       }
 
       const containerClient = this.client.getContainerClient(this.containerName);
-      // Verificar si el contenedor existe
       const containerExists = await containerClient.exists();
       if (!containerExists) {
         throw new Error(`Azure container '${this.containerName}' does not exist.`);
       }
 
       const blobClient = containerClient.getBlobClient(fileKey);
-      // Verificar si el blob existe antes de intentar eliminarlo
       const blobExists = await blobClient.exists();
       if (!blobExists) {
-        console.log(`File ${fileKey} does not exist in Azure container.`);
-        return; // No es necesario eliminarlo si no existe
+        return;
       }
 
       await blobClient.deleteIfExists();
@@ -95,14 +91,12 @@ export class AzureProvider implements StorageInterface {
       }
 
       const containerClient = this.client.getContainerClient(this.containerName);
-      // Verificar si el contenedor existe
       const containerExists = await containerClient.exists();
       if (!containerExists) {
         throw new Error(`Azure container '${this.containerName}' does not exist.`);
       }
 
       const blobClient = containerClient.getBlobClient(fileKey);
-      // Verificar si el blob existe
       const blobExists = await blobClient.exists();
       if (!blobExists) {
         throw new Error(`File ${fileKey} does not exist in Azure container.`);

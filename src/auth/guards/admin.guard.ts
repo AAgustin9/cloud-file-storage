@@ -6,7 +6,7 @@ export class AdminGuard implements CanActivate {
     const req = context.switchToHttp().getRequest();
     const user = req.user;
 
-    if (user?.role !== 'ADMIN') {
+    if (!user?.isAdmin) {
       throw new ForbiddenException('Only admins can access this route');
     }
 

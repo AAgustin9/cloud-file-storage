@@ -1,14 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
-import { AppModule } from '../src/app.module';
+import { AppE2eModule } from './app.e2e-module';
 
 describe('AuthController (e2e)', () => {
   let app: INestApplication;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
+      imports: [AppE2eModule],
     }).compile();
 
     app = moduleFixture.createNestApplication();
@@ -16,9 +16,10 @@ describe('AuthController (e2e)', () => {
   });
 
   it('should register a user', () => {
+    const date = Date.now();
     return request(app.getHttpServer())
       .post('/auth/register')
-      .send({ username: 'testuser', password: 'testpass' })
+      .send({ username: `testuser${date}`, password: 'testpass90' })
       .expect(201)
       .expect((res) => {
         expect(res.body.message).toBe('User registered successfully');
