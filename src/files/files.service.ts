@@ -26,7 +26,7 @@ export class FilesService {
       throw new NotFoundException(`User with ID ${userId} not found`);
     }
 
-    if (user.usedquota + file.size > this.MAX_MONTHLY_BYTES) {
+    if (Number(user.usedquota) + file.size > Number(this.MAX_MONTHLY_BYTES)) {
       throw new ForbiddenException(`Cannot upload file: quota exceeded`);
     }
 
