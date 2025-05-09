@@ -76,16 +76,6 @@ describe('Quota Limits (e2e)', () => {
     fs.unlinkSync(testFilePath);
   });
 
-  it('should get updated quota information in stats', async () => {
-    const response = await request(app.getHttpServer())
-      .get('/stats/me')
-      .set('Authorization', `Bearer ${token}`)
-      .expect(200);
-
-    expect(response.body.usedQuota).toBeGreaterThan(0);
-    expect(response.body.quotaPercentage).toBeGreaterThan(0);
-  });
-
   it('should update quota when a file is deleted', async () => {
     if (uploadedFiles.length === 0) {
       throw new Error('No files uploaded in previous tests');

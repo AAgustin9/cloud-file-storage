@@ -8,7 +8,13 @@ import { StatsModule } from '../src/stats/stats.module';
 import { MAX_MONTHLY_BYTES_TEST } from '../src/utils/constants';
 
 import * as constants from '../src/utils/constants';
-(constants as any).MAX_MONTHLY_BYTES = MAX_MONTHLY_BYTES_TEST;
+
+interface Constants {
+  MAX_MONTHLY_BYTES: number;
+  MAX_MONTHLY_BYTES_TEST: number;
+}
+
+(constants as Constants).MAX_MONTHLY_BYTES = MAX_MONTHLY_BYTES_TEST;
 
 @Module({
   imports: [

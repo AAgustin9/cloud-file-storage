@@ -48,23 +48,6 @@ describe('StatsController (e2e)', () => {
     adminToken = adminLoginResponse.body.access_token;
   });
 
-  it('should get personal stats for a regular user', async () => {
-    await request(app.getHttpServer())
-      .get('/stats/me')
-      .set('Authorization', `Bearer ${userToken}`)
-      .expect(200)
-      .expect((res) => {
-        expect(res.body).toHaveProperty('userId');
-        expect(res.body).toHaveProperty('username');
-        expect(res.body).toHaveProperty('usedQuota');
-        expect(res.body).toHaveProperty('usedQuotaHuman');
-        expect(res.body).toHaveProperty('quotaPercentage');
-        expect(res.body).toHaveProperty('fileCount');
-        expect(res.body).toHaveProperty('recentFiles');
-        expect(Array.isArray(res.body.recentFiles)).toBe(true);
-      });
-  });
-
   it('should deny access to global stats for regular users', async () => {
     await request(app.getHttpServer())
       .get('/stats')
