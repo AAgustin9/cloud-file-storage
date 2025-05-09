@@ -28,8 +28,12 @@ describe('AuthController (e2e)', () => {
 
   it('should login the user and return a token', async () => {
     await request(app.getHttpServer())
+      .post('/auth/register')
+      .send({ username: 'testuser123', password: 'testpass' });
+
+    await request(app.getHttpServer())
       .post('/auth/login')
-      .send({ username: 'testuser', password: 'testpass' })
+      .send({ username: 'testuser123', password: 'testpass' })
       .expect(201)
       .expect((res) => {
         expect(res.body).toHaveProperty('access_token');
