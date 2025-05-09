@@ -1,6 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as AWS from 'aws-sdk';
-import { v4 as uuid } from 'uuid';
 import { StorageInterface } from './storage.interface';
 
 @Injectable()
