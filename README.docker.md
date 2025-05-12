@@ -58,21 +58,6 @@ docker-compose down -v
 
 - **API NestJS**: http://localhost:3000
 - **Documentación Swagger**: http://localhost:3000/api
-- **MinIO Console**: http://localhost:9001 (usuario: minio, contraseña: minio123)
-
-## Uso de MinIO como almacenamiento
-
-Si deseas usar MinIO como proveedor de almacenamiento compatible con S3, necesitarás configurar las siguientes variables de entorno en el servicio `api` en el archivo `docker-compose.yml`:
-
-```yaml
-environment:
-  - S3_ENDPOINT=http://minio:9000
-  - S3_ACCESS_KEY=minio
-  - S3_SECRET_KEY=minio123
-  - S3_BUCKET=cloud-files
-```
-
-Además, necesitarás crear el bucket "cloud-files" en MinIO a través de la consola web después de iniciar los servicios.
 
 ## Solución de problemas
 
